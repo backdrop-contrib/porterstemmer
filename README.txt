@@ -9,5 +9,5 @@ It reduces each word in the index to its basic root or stem (e.g. 'blogging' to
 considered equivalent when searching. This generally results in more relevant
 results.
 
-
-
+Note that the Porter Stemmer algorithm is specific to American English, so some 
+British spellings will not be stemmed correctly.
