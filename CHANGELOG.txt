@@ -1,0 +1,17 @@
+// $Id$
+
+
+Porter Stemmer x.x-x.x, xxxx-xx-xx
+----------------------------------
+
+Porter Stemmer 6.x-2.0, 2009-08-04
+----------------------------------
+#511930 #437094 #219335 by jhodgdon: Upgrade to the Porter 2 Stemmer 
+algorithm; minimum word size 3 characters. Also updated install instructions 
+and Readme, updated for coding standards, and added SimpleTest tests.
+
+Porter Stemmer 6.x-1.0, 2008-02-28
+----------------------------------
+#198226 by ceejayoz: D6 compatability and also merging d5 changes to HEAD
+
+by unconed: Initial 6.x port of Porter Stemmer
