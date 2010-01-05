@@ -16,6 +16,12 @@ results in more relevant results.
 Note that the Porter Stemmer algorithm is specific to American
 English, so some British spellings will not be stemmed correctly.
 
+This module will use the PECL "stem" library's implementation of the Porter
+Stemmer algorithm, if it is installed on your server. If the PECL "stem"
+library is not available, the module uses its own PHP implementation of the
+algorithm. The output is the same in either case. More information about the
+PECL "stem" library: http://pecl.php.net/package/stem
+
 
 INSTALLATION
 ------------
@@ -36,3 +42,5 @@ module against a standard word list downloaded from the site above).
 Due to the way output is displayed in SimpleTest, you may run into
 browser timeout or memory issues if you try to run all 16 of the
 "Stemming output" tests during the same test run.
+
+Tests are provided both for the internal algorithm and the PECL library.

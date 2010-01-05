@@ -13,10 +13,10 @@
  *
  * Stems the words in $text, using the Porter Stemmer 2 algorithm.
  */
-function porterstemmer_search_preprocess(&$text) {
+function porterstemmer_search_preprocess($text) {
 
   // Convert text to lower case, and replace special apostrophes with regular
-  // apostrophes
+  // apostrophes.
   $text = drupal_strtolower(str_replace('’', "'", $text));
 
   // Split into words
@@ -26,16 +26,23 @@ function porterstemmer_search_preprocess(&$text) {
     return $text;
   }
 
-  // Process each word, skipping delimiters
+  $has_pecl_stem = _porterstemmer_pecl_loaded();
+
+  // Process each word, skipping delimiters.
   $isword = !preg_match('/' . PORTERSTEMMER_BOUNDARY . '/', $words[0] );
   foreach ($words as $k => $word) {
     if ($isword) {
-      $words[$k] = porterstemmer_stem($word);
+      if ( $has_pecl_stem ) {
+        $words[$k] = stem_english($word);
+      }
+      else {
+        $words[$k] = porterstemmer_stem($word);
+      }
     }
     $isword = !$isword;
   }
 
-  // Put it all back together
+  // Put it all back together (note that delimiters are in $words).
   return implode('', $words);
 }
 
@@ -47,6 +54,80 @@ function porterstemmer_help($section = 'admin/help#search') {
     case 'admin/modules#description':
       return t('Implements the Porter-Stemmer version 2 algorithm to improve English searching.');
   }
+}
+
+/**
+ * Implementation of hook_sbp_excerpt_match().
+ *
+ * Allows Porter Stemmer to display better search excerpts with the
+ * Search by page module.
+ */
+function porterstemmer_sbp_excerpt_match( $key, $text, $offset, $boundary ) {
+  // Stem the keyword down to its root form.
+  $key = porterstemmer_stem( $key );
+
+  // In many cases, the root word is a substring of the full word, but not
+  // all. The cases where it is not, the root ends in e, i, or y, and if this
+  // last letter is removed, the root is a substring of the full word.
+  // So remove these letters at the end of the root.
+
+  $didit = FALSE;
+  porterstemmer_suffix( $key, 'i', '', $didit, NULL, 2 ) OR
+    porterstemmer_suffix( $key, 'e', '', $didit, NULL, 2 ) OR
+    porterstemmer_suffix( $key, 'y', '', $didit, NULL, 2 );
+
+  // Look for this modified key at the start of a word.
+
+  $match = array();
+  if (!preg_match('/'. $boundary . $key . '/iu', $text, $match, PREG_OFFSET_CAPTURE, $offset )) {
+    // didn't match our modified key.
+    return FALSE;
+  }
+
+  // If we get here, we have a potential match. Find the end of the word we
+  // actually matched, so it can be highlighted (making sure it's a real match
+  // for our key).
+  $newmatch = array();
+  foreach ( $match as $item ) {
+    $pos = $match[0][1];
+    // Note: Do not use drupal_strlen/drupal_substr here! Need the real PHP
+    // string lengths/pos.
+    if (preg_match('/' . $boundary . '/iu', $text, $newmatch,
+        PREG_OFFSET_CAPTURE, $pos + strlen($key))) {
+      $keyfound = substr($text, $pos, $newmatch[0][1] - $pos);
+      $foundstem = porterstemmer_stem( $keyfound );
+      porterstemmer_suffix( $foundstem, 'i', '', $didit, NULL, 2 ) OR
+        porterstemmer_suffix( $foundstem, 'e', '', $didit, NULL, 2 ) OR
+        porterstemmer_suffix( $foundstem, 'y', '', $didit, NULL, 2 );
+
+      if ($foundstem == $key) {
+        return array('where' => $pos, 'keyword' => $keyfound);
+      }
+    }
+  }
+
+  // If we get here, none of the potential matches worked out.
+  return FALSE;
+}
+
+/**
+ * Checks to see if the PECL stem extension has been loaded.
+ *
+ * @return
+ *    TRUE if the stem_english() function from the PECL stem library can be
+ *    used, FALSE if not.
+ */
+function _porterstemmer_pecl_loaded() {
+  static $has_pecl_stem = FALSE;
+  static $already_checked = FALSE;
+
+  if ( $already_checked ) {
+    return $has_pecl_stem;
+  }
+
+  $has_pecl_stem = extension_loaded('stem') && function_exists('stem_english');
+  $already_checked = TRUE;
+  return $has_pecl_stem;
 }
 
 /**
@@ -82,14 +163,6 @@ define('PORTERSTEMMER_LI_END', '[cdeghkmnrt]');
 define('PORTERSTEMMER_BOUNDARY', "[^a-zA-Z']+");
 
 /**
- * Minimum number of characters in a "word", for Drupal purposes.
- * Note that the Porter Stemmer algorithm leaves alone words less than
- * 2 characters, but Drupal Search doesn't like search terms less than
- * 3 characters, so we establish a minimum stemming length of 3.
- */
-define('PORTERSTEMMER_MIN_CHARS', 3);
-
-/**
  * Stems a word, using the Porter Stemmer 2 algorithm.
  *
  * @param $word
@@ -123,10 +196,22 @@ function porterstemmer_stem($word) {
 /**
  * Returns TRUE if word is too short to continue stemming.
  */
-function porterstemmer_too_short($word) {
-  if ( drupal_strlen($word) < PORTERSTEMMER_MIN_CHARS ) {
+function porterstemmer_too_short($word, $reset = FALSE) {
+  static $min_chars = 0;
+  if ( !$min_chars || $reset ) {
+    // Get Search module's idea of minimum characters
+    $min_chars = intval( variable_get('minimum_word_size', 3));
+    // Porter algorithm cannot handle less than 2 characters
+    if ( $min_chars < 2 ) {
+      $min_chars = 2;
+    }
+  }
+
+  if ( drupal_strlen($word) < $min_chars ) {
     return TRUE;
   }
+
+  return FALSE;
 }
 
 /**
@@ -137,7 +222,7 @@ function porterstemmer_too_short($word) {
  * and returns TRUE to end stemming process.
  */
 function porterstemmer_step_ending(&$word, $tmp) {
-  if ( drupal_strlen($tmp) < PORTERSTEMMER_MIN_CHARS ) {
+  if ( porterstemmer_too_short( $tmp)) {
     return TRUE;
   }
 
@@ -179,7 +264,7 @@ function porterstemmer_suffix(&$word, $oldend, $newend, &$didit, $other = NULL, 
     // ending isn't even there
     return FALSE;
   }
-  
+
   // Does word match other regular expression?
   if ($other && !preg_match($other, $word)) {
     // no match, so just return without replacing
@@ -227,7 +312,7 @@ function porterstemmer_short_word( $word, $r1 ) {
   }
 
   // Does it end in the other type of short syllable?
-  if (preg_match('/' . PORTERSTEMMER_NOT_VOWEL . PORTERSTEMMER_VOWEL . 
+  if (preg_match('/' . PORTERSTEMMER_NOT_VOWEL . PORTERSTEMMER_VOWEL .
       PORTERSTEMMER_NOT_VOWEL_WXY . '$/', $word)) {
     return TRUE;
   }
@@ -259,19 +344,21 @@ function porterstemmer_prestemming(&$word, &$r1, &$r2) {
 
   $tmp = $word;
 
-  // Remove initial apostrophes
-  $tmp = preg_replace("/^'+/", '', $tmp);
+  // Remove initial apostrophe
+  $tmp = preg_replace("/^'/", '', $tmp);
   if (porterstemmer_too_short($tmp)) {
     return TRUE;
   }
 
   // y -> Y if we should treat it as consonant
   $tmp = preg_replace('/^y/', 'Y', $tmp);
-  $count = 1;
-  while ( $count ) {
+  $before = 'not going to match';
+  while ( $before != $tmp ) {
     // Do this replacement one by one, to avoid unlikely yyyy issues
-    $tmp = preg_replace('/(' . PORTERSTEMMER_VOWEL . ')y/', '$1Y', 
-      $tmp, 1, $count);
+    $before = $tmp;
+    // Note: do not use count param to preg_replace - added in 5.10!!
+    $tmp = preg_replace('/(' . PORTERSTEMMER_VOWEL . ')y/', '$1Y',
+      $tmp, 1);
   }
 
   // This y/Y step should not have changed the word length
@@ -284,7 +371,7 @@ function porterstemmer_prestemming(&$word, &$r1, &$r2) {
   $r1 = $max;
   $r2 = $max;
   $matches = array();
-  $rdef = '/^' . PORTERSTEMMER_NOT_VOWEL . '*' . 
+  $rdef = '/^' . PORTERSTEMMER_NOT_VOWEL . '*' .
     PORTERSTEMMER_VOWEL . '+(' . PORTERSTEMMER_NOT_VOWEL . ')/';
 
   // Exceptions to R1: If word begins with 'gener', 'commun', or 'arsen',
@@ -325,12 +412,7 @@ function porterstemmer_step0(&$word) {
     porterstemmer_suffix($tmp, "'s", '', $didit) OR
     porterstemmer_suffix($tmp, "'", '', $didit);
 
-  if (porterstemmer_too_short($tmp)) {
-    return TRUE;
-  }
-
-  $word = $tmp;
-  return FALSE;
+  return porterstemmer_step_ending( $word, $tmp );
 }
 
 
@@ -352,14 +434,14 @@ function porterstemmer_step1a(&$word) {
   // if there is more than one letter preceeding. So make sure to
   // test/replace for both conditions.
 
-  if ( !$done && porterstemmer_suffix($tmp, 'ies', 'ie', $didit, '/^.ies$/')) {
+  if ( !$done && porterstemmer_suffix($tmp, 'ies', 'ie', $didit, '/^.?ies$/')) {
     if ( !$didit ) {
       porterstemmer_suffix($tmp, 'ies', 'i', $didit);
     }
     $done = TRUE;
   }
 
-  if ( !$done && porterstemmer_suffix($tmp, 'ied', 'ie', $didit, '/^.ied$/')) {
+  if ( !$done && porterstemmer_suffix($tmp, 'ied', 'ie', $didit, '/^.?ied$/')) {
     if ( !$didit ) {
       porterstemmer_suffix($tmp, 'ied', 'i', $didit);
     }
@@ -371,16 +453,11 @@ function porterstemmer_step1a(&$word) {
     porterstemmer_suffix($tmp, 'us', 'us', $didit) OR
     // only delete s at end of word if there is at least one vowel that
     // is not immediately before the s
-    porterstemmer_suffix($tmp, 's', '', $didit, 
+    porterstemmer_suffix($tmp, 's', '', $didit,
       '/' . PORTERSTEMMER_VOWEL . '.+s$/');
   }
 
-  if (porterstemmer_too_short($tmp)) {
-    return TRUE;
-  }
-
-  $word = $tmp;
-  return FALSE;
+  return porterstemmer_step_ending( $word, $tmp );
 }
 
 
@@ -420,7 +497,7 @@ function porterstemmer_step1b(&$word, $r1) {
     $done = porterstemmer_suffix($tmp, 'at', 'ate', $didit) OR
       porterstemmer_suffix($tmp, 'bl', 'ble', $didit) OR
       porterstemmer_suffix($tmp, 'iz', 'ize', $didit);
-    if (!$done && 
+    if (!$done &&
       preg_match('/' . PORTERSTEMMER_DOUBLE . '$/', $tmp)) {
       // drop last letter if it's a double-letter ending
       $tmp = drupal_substr($tmp, 0, -1);
@@ -494,10 +571,10 @@ function porterstemmer_step2(&$word, $r1) {
     porterstemmer_suffix($tmp, 'izer', 'ize', $didit, NULL, $r1 + 4) OR
     porterstemmer_suffix($tmp, 'bli', 'ble', $didit, NULL, $r1 + 3) OR
     // ogi is only replaced if preceeded by l
-    porterstemmer_suffix($tmp, 'ogi', 'og', $didit, 
+    porterstemmer_suffix($tmp, 'ogi', 'og', $didit,
       '/logi$/', $r1 + 3) OR
     // li is only replaced if preceeded by a valid li-ending
-    porterstemmer_suffix($tmp, 'li', '', $didit, 
+    porterstemmer_suffix($tmp, 'li', '', $didit,
       '/' . PORTERSTEMMER_LI_END . 'li$/', $r1 + 2);
 
   return porterstemmer_step_ending($word, $tmp);
@@ -592,11 +669,11 @@ function porterstemmer_step5(&$word, $r1, $r2) {
   // a short syllable
   $len = drupal_strlen( $tmp );
   if ( !$done && preg_match( '/e$/', $tmp ) &&
-    ( $len > $r2 || 
-      ( $len > $r1 && 
-        !preg_match( '/^' . PORTERSTEMMER_VOWEL . PORTERSTEMMER_NOT_VOWEL . 
+    ( $len > $r2 ||
+      ( $len > $r1 &&
+        !preg_match( '/^' . PORTERSTEMMER_VOWEL . PORTERSTEMMER_NOT_VOWEL .
           'e$/', $tmp ) &&
-        !preg_match( '/' . PORTERSTEMMER_NOT_VOWEL . PORTERSTEMMER_VOWEL . 
+        !preg_match( '/' . PORTERSTEMMER_NOT_VOWEL . PORTERSTEMMER_VOWEL .
           PORTERSTEMMER_NOT_VOWEL_WXY . 'e$/', $tmp )))) {
     $tmp = drupal_substr( $tmp, 0, -1 );
   }

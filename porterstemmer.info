@@ -2,3 +2,5 @@
 name = Porter Stemmer
 description = "Improve English language searching by simplifying related words to their root (conjugations, plurals, ...)."
 core = 6.x
+package = "Search"
+
