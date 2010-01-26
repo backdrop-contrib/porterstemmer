@@ -3,8 +3,9 @@
 Porter Stemmer x.x-x.x, xxxx-xx-xx
 ----------------------------------
 
-Porter Stemmer 6.x-2.x, xxxx-xx-xx
+Porter Stemmer 7.x-2.x, xxxx-xx-xx
 ----------------------------------
+#674064 by jhodgdon: Get Porter Stemmer working with Drupal 7.x.
 
 
 Porter Stemmer 6.x-2.5, 2009-12-07

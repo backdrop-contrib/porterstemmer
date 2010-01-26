@@ -9,7 +9,7 @@
  */
 
 /**
- * Implementation of hook_search_preprocess().
+ * Implements hook_search_preprocess().
  *
  * Stems the words in $text, using the Porter Stemmer 2 algorithm.
  */
@@ -47,17 +47,20 @@ function porterstemmer_search_preprocess($text) {
 }
 
 /**
- * Implementation of hook_help().
+ * Implements hook_help().
  */
-function porterstemmer_help($section = 'admin/help#search') {
-  switch ($section) {
-    case 'admin/modules#description':
-      return t('Implements the Porter-Stemmer version 2 algorithm to improve English searching.');
+function porterstemmer_help($path, $arg) {
+  switch ($path) {
+    case 'admin/help#porterstemmer':
+      $output = '';
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('The Porter Stemmer module implements version 2 of the <a href="@algorithm">Porter Stemmer algorithm</a>, to improve American English-language searching with the core <a href="@search-help">Search module</a>. Stemming reduces a word to its basic root or stem (e.g. "blogging" to "blog") so that variations on a word ("blogs", "blogged", "blogging", "blog") are considered equivalent when searching. This generally results in more relevant results.', array('@search-help' => url('admin/help/search'), '@algorithm' => 'http://snowball.tartarus.org/algorithms/english/stemmer.html')) . '</p>';
+      return $output;
   }
 }
 
 /**
- * Implementation of hook_sbp_excerpt_match().
+ * Implements hook_sbp_excerpt_match().
  *
  * Allows Porter Stemmer to display better search excerpts with the
  * Search by page module.
