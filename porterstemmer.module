@@ -82,7 +82,7 @@ function porterstemmer_sbp_excerpt_match( $key, $text, $offset, $boundary ) {
   // Look for this modified key at the start of a word.
 
   $match = array();
-  if (!preg_match('/'. $boundary . $key . '/iu', $text, $match, PREG_OFFSET_CAPTURE, $offset )) {
+  if (!preg_match('/' . $boundary . $key . '/iu', $text, $match, PREG_OFFSET_CAPTURE, $offset )) {
     // didn't match our modified key.
     return FALSE;
   }
@@ -134,23 +134,22 @@ function _porterstemmer_pecl_loaded() {
 }
 
 /**
- * Regular expression defining a vowel for Porter Stemmer purposes.
+ * Regular expression defining a vowel for Porter Stemmer.
  */
 define('PORTERSTEMMER_VOWEL', '[aeiouy]');
 
 /**
- * Regular expression defining not-a-vowel for Porter Stemmer purposes.
+ * Regular expression defining not-a-vowel for Porter Stemmer.
  */
 define('PORTERSTEMMER_NOT_VOWEL', '[^aeiouy]');
 
 /**
- * Regular expression defining not-a-vowel and not w, x, Y,
- * for Porter Stemmer purposes.
+ * Regular expression defining not a vowel, w, x, or Y for Porter Stemmer.
  */
 define('PORTERSTEMMER_NOT_VOWEL_WXY', '[^aeiouywxY]');
 
 /**
- * Regular expression defining a double consonant for Porter Stemmer purposes.
+ * Regular expression defining a double consonant for Porter Stemmer.
  */
 define('PORTERSTEMMER_DOUBLE', '(bb|dd|ff|gg|mm|nn|pp|rr|tt)');
 
@@ -160,8 +159,9 @@ define('PORTERSTEMMER_DOUBLE', '(bb|dd|ff|gg|mm|nn|pp|rr|tt)');
 define('PORTERSTEMMER_LI_END', '[cdeghkmnrt]');
 
 /**
- * Regular expression defining a word boundary for Porter Stemmer purposes
- * (anything not a letter or an apostrophe).
+ * Regular expression defining a word boundary for Porter Stemmer.
+ *
+ * A word boundary is anything not a letter or an apostrophe.
  */
 define('PORTERSTEMMER_BOUNDARY', "[^a-zA-Z']+");
 
