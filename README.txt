@@ -13,8 +13,9 @@ that variations on a word ('blogs', 'blogger', 'blogging', 'blog') are
 considered equivalent when searching. This generally results in more relevant
 results.
 
-Note that the Porter Stemmer algorithm is specific to American English, so some
-British spellings will not be stemmed correctly.
+Note that a few parts of the Porter Stemmer algorithm work better for American
+English than British English, so some British spellings will not be stemmed
+correctly.
 
 This module will use the PECL "stem" library's implementation of the Porter
 Stemmer algorithm, if it is installed on your server. If the PECL "stem" library
