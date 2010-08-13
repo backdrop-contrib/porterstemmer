@@ -5,6 +5,8 @@ Porter Stemmer x.x-x.x, xxxx-xx-xx
 
 Porter Stemmer 7.x-2.x, xxxx-xx-xx
 ----------------------------------
+#850950 by jhodgdon, gpk: Fix problems in excerpt matching function.
+
 #699170 by jhodgdon: Address coder warnings.
 
 #674064 by jhodgdon: Get Porter Stemmer working with Drupal 7.x.
