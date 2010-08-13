@@ -752,7 +752,12 @@ class PorterStemmerInternalsUnitTest extends DrupalWebTestCase {
     $this->assertEqual($result1['where'], 2, 'Found match 1 in right place', 'Excerpt');
     $this->assertEqual($result1['keyword'], 'walked', 'Found right keyword for match 1', 'Excerpt');
 
-    // Test with upper-case match.
+    // Test with upper-case in the keyword.
+    $result1b = porterstemmer_sbp_excerpt_match('waLk', $text, $offset, $boundary);
+    $this->assertEqual($result1b['where'], 2, 'Found match 1b in right place', 'Excerpt');
+    $this->assertEqual($result1b['keyword'], 'walked', 'Found right keyword for match 1b', 'Excerpt');
+
+    // Test with upper-case in the text.
     $offset = 12;
     $result2 = porterstemmer_sbp_excerpt_match($key, $text, $offset, $boundary);
     $this->assertEqual($result2['where'], 22, 'Found match 2 in right place', 'Excerpt');
