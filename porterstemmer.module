@@ -80,7 +80,7 @@ function porterstemmer_sbp_excerpt_match($key, $text, $offset, $boundary) {
 
   // Look for this modified key at the start of a word.
   $match = array();
-  if (!preg_match('/'. $boundary . '(' . $key . ')/iu', $text, $match, PREG_OFFSET_CAPTURE, $offset)) {
+  if (!preg_match('/' . $boundary . '(' . $key . ')/iu', $text, $match, PREG_OFFSET_CAPTURE, $offset)) {
     // Didn't match our modified key.
     return FALSE;
   }
