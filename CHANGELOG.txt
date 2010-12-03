@@ -3,7 +3,11 @@
 Porter Stemmer x.x-x.x, xxxx-xx-xx
 ----------------------------------
 
-Porter Stemmer 7.x-2.x, xxxx-xx-xx
+Porter Stemmer 7.x-1.x, xxxx-xx-xx
+----------------------------------
+
+
+Porter Stemmer 7.x-1.0, 2010-12-03
 ----------------------------------
 #850950 by jhodgdon, gpk: Fix problems in excerpt matching function.
 
