@@ -1,4 +1,3 @@
-; $Id$
 name = Porter Stemmer
 description = "Improves American English language searching by simplifying related words to their root (conjugations, plurals, ...)."
 core = 7.x

@@ -1,4 +1,3 @@
-// $Id$
 
 For general information about this module, check the README.txt file.
 
