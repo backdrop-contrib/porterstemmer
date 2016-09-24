@@ -132,6 +132,8 @@ class PorterStemmerOutput1UnitTest extends DrupalWebTestCase {
     // See if the PECL stemming library is installed
 
     $this->has_pecl_stem = _porterstemmer_pecl_loaded();
+
+    module_load_include('inc', 'porterstemmer', 'includes/standard-stemmer');
   }
 
   /**
@@ -543,6 +545,7 @@ class PorterStemmerInternalsUnitTest extends DrupalWebTestCase {
 
   public function setUp() {
     parent::setUp('porterstemmer');
+    module_load_include('inc', 'porterstemmer', 'includes/standard-stemmer');
   }
 
   /**
