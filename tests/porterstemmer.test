@@ -12,25 +12,18 @@
 /**
  * Functional test for Porter Stemmer.
  */
-class PorterStemmerFunctionalTest extends DrupalWebTestCase {
-  public static function getInfo() {
-    return array(
-      'name' => t('Functional test'),
-      'description' => t('Test that stemmed searching works.'),
-      'group' => t('Porter Stemmer'),
-    );
-  }
+class PorterStemmerFunctionalTest extends BackdropWebTestCase {
 
   public function setUp() {
     parent::setUp('porterstemmer', 'search');
 
     // Set up a super-user
-    $this->superuser = $this->drupalCreateUser( array( 'administer nodes',
+    $this->superuser = $this->backdropCreateUser( array( 'administer nodes',
         'access content', 'administer content types',
         'administer search', 'search content',
         'access administration pages',
         'administer site configuration' ));
-    $this->drupalLogin( $this->superuser );
+    $this->backdropLogin( $this->superuser );
 
     // Create some content to search, with the words walk, walking, and walked.
     $info = array(
@@ -39,9 +32,9 @@ class PorterStemmerFunctionalTest extends DrupalWebTestCase {
       'language' => LANGUAGE_NONE,
       'title' => 'first page',
     );
-    $node = $this->drupalCreateNode($info);
+    $node = $this->backdropCreateNode($info);
 
-    $this->drupalGet('node/' . $node->nid);
+    $this->backdropGet('node/' . $node->nid);
     $this->assertText('walk');
 
     $info = array(
@@ -50,8 +43,8 @@ class PorterStemmerFunctionalTest extends DrupalWebTestCase {
       'language' => LANGUAGE_NONE,
       'title' => 'second page',
     );
-    $node = $this->drupalCreateNode($info);
-    $this->drupalGet('node/' . $node->nid);
+    $node = $this->backdropCreateNode($info);
+    $this->backdropGet('node/' . $node->nid);
     $this->assertText('walked');
 
     $info = array(
@@ -60,8 +53,8 @@ class PorterStemmerFunctionalTest extends DrupalWebTestCase {
       'language' => LANGUAGE_NONE,
       'title' => 'third page',
     );
-    $node = $this->drupalCreateNode($info);
-    $this->drupalGet('node/' . $node->nid);
+    $node = $this->backdropCreateNode($info);
+    $this->backdropGet('node/' . $node->nid);
     $this->assertText('walking');
 
     $this->cronRun();
@@ -71,10 +64,10 @@ class PorterStemmerFunctionalTest extends DrupalWebTestCase {
    * Tests that all three pages can be found in searches.
    */
   function testSearch() {
-    $this->drupalLogin( $this->superuser );
+    $this->backdropLogin( $this->superuser );
 
     // Search for 'walk' and verify all three pages were found.
-    $this->drupalPost('search',
+    $this->backdropPost('search',
       array('keys' => 'walk' ),
       'Search'
     );
@@ -83,7 +76,7 @@ class PorterStemmerFunctionalTest extends DrupalWebTestCase {
     $this->assertText('third', 'Third page was found with search for walk');
 
     // Search for 'walking' and verify all three pages were found.
-    $this->drupalPost('search',
+    $this->backdropPost('search',
       array('keys' => 'walking' ),
       'Search'
     );
@@ -92,7 +85,7 @@ class PorterStemmerFunctionalTest extends DrupalWebTestCase {
     $this->assertText('third', 'Third page was found with search for walking');
 
     // Search for 'walked' and verify all three pages were found.
-    $this->drupalPost('search',
+    $this->backdropPost('search',
       array('keys' => 'walked' ),
       'Search'
     );
@@ -101,7 +94,7 @@ class PorterStemmerFunctionalTest extends DrupalWebTestCase {
     $this->assertText('third', 'Third page was found with search for walked');
 
     // Search for 'blahblahblah' and verify none of the pages were found.
-    $this->drupalPost('search',
+    $this->backdropPost('search',
       array('keys' => 'blahblahblah' ),
       'Search'
     );
@@ -114,7 +107,7 @@ class PorterStemmerFunctionalTest extends DrupalWebTestCase {
 /**
  * Unit tests for Porter Stemmer - Stemming output part 1.
  */
-class PorterStemmerOutput1UnitTest extends DrupalWebTestCase {
+class PorterStemmerOutput1UnitTest extends BackdropWebTestCase {
 
   public $has_pecl_stem = FALSE;
 
@@ -169,7 +162,7 @@ class PorterStemmerOutput1UnitTest extends DrupalWebTestCase {
     }
 
     // Open word file
-    $file = drupal_get_path('module', 'porterstemmer') . '/testwords.txt';
+    $file = backdrop_get_path('module', 'porterstemmer') . '/tests/testwords.txt';
 
     $handle = @fopen($file, "r");
     $this->assertTrue($handle, "Open file containing words to test", 'Startup');
@@ -202,8 +195,8 @@ class PorterStemmerOutput1UnitTest extends DrupalWebTestCase {
       $in = $words[0];
       $right = $words[1];
       // Skip words less than 2 characters, which is minimum for Porter
-      if ( drupal_strlen( $in ) < 2 ||
-        drupal_strlen( $right ) < 2 ) {
+      if ( backdrop_strlen( $in ) < 2 ||
+        backdrop_strlen( $right ) < 2 ) {
         continue;
       }
 
@@ -533,7 +526,7 @@ class PorterStemmerOutput15UnitTest extends PorterStemmerOutput1UnitTest {
 /**
  * Unit tests for Porter Stemmer - Stemming internals.
  */
-class PorterStemmerInternalsUnitTest extends DrupalWebTestCase {
+class PorterStemmerInternalsUnitTest extends BackdropWebTestCase {
 
   public static function getInfo() {
     return array(

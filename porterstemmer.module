@@ -1,8 +1,7 @@
 <?php
-
 /**
  * @file
- * Porter 2 Stemming for Drupal.
+ * Porter 2 Stemming for Backdrop CMS.
  *
  * It can either use the PECL stemming library, or a PHP implementation in
  * the includes/standard-stemmer.inc file.
@@ -24,7 +23,7 @@ function porterstemmer_search_preprocess($text) {
 
   // Convert text to lower case, and replace special apostrophes with regular
   // apostrophes.
-  $text = drupal_strtolower(str_replace('’', "'", $text));
+  $text = backdrop_strtolower(str_replace('’', "'", $text));
 
   // Split into words.
   $words = preg_split('/(' . PORTERSTEMMER_BOUNDARY . '+)/', $text, -1, PREG_SPLIT_DELIM_CAPTURE);
@@ -103,7 +102,7 @@ function porterstemmer_sbp_excerpt_match($key, $text, $offset, $boundary) {
   // for our key).
   $newmatch = array();
   $pos = $match[1][1];
-  // Note: Do not use drupal_strlen/drupal_substr here! Need the real PHP
+  // Note: Do not use backdrop_strlen/backdrop_substr here! Need the real PHP
   // string lengths/pos.
   if (preg_match('/' . $boundary . '/iu', $text, $newmatch,
       PREG_OFFSET_CAPTURE, $pos + strlen($key))) {
@@ -120,7 +119,7 @@ function porterstemmer_sbp_excerpt_match($key, $text, $offset, $boundary) {
   porterstemmer_suffix($foundstem, 'y', '', $didit, NULL, 2);
 
   // Both $foundstem and $key may contain upper case.
-  if (drupal_strtolower($foundstem) == drupal_strtolower($key)) {
+  if (backdrop_strtolower($foundstem) == backdrop_strtolower($key)) {
     return array('where' => $pos, 'keyword' => $keyfound);
   }
 
